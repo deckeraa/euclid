@@ -2,7 +2,7 @@
 
 ;; example code from https://www.wedesoft.de/software/2023/05/26/lwjgl3-clojure/
 (import '[org.lwjgl BufferUtils]
-        '[org.lwjgl.glfw GLFW]
+        '[org.lwjgl.glfw GLFW GLFWErrorCallback]
         '[org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL30])
 
 (def width 320)
@@ -68,19 +68,26 @@ void main()
 
 (defonce window-thread (atom nil))
 
+(defonce init-glfw
+  (do
+    (GLFW/glfwInit)
+    (GLFW/glfwSetErrorCallback (GLFWErrorCallback/createPrint System/err))))
+
 (defn create-window []
   (GLFW/glfwInit)
+  (GLFW/glfwDefaultWindowHints)
   (GLFW/glfwWindowHint GLFW/GLFW_VISIBLE GLFW/GLFW_FALSE)
+  (GLFW/glfwWindowHint GLFW/GLFW_RESIZABLE GLFW/GLFW_TRUE)
   (let [window (GLFW/glfwCreateWindow 800 600 "LWJGL in Clojure" 0 0)]
-    (println "a")
     (GLFW/glfwMakeContextCurrent window)
-    (println "b")
+    (GL/createCapabilities)
+    
     (GLFW/glfwShowWindow window)
-    (println "c")
-    ;; (try 
-    ;;   (GL11/glClearColor 0.0 0.0 0.0 1.0)
-    ;;   (catch Exception e
-    ;;     (println "Exception in create-window: " e)))
+    
+    (try 
+      (GL11/glClearColor 1.0 0.0 0.0 1.0)
+      (catch Exception e
+        (println "Exception in create-window: " e)))
     (println "d")
     window))
 
@@ -126,11 +133,17 @@ void main()
                                       (while (not (GLFW/glfwWindowShouldClose window))
                                         ;(println "In loop")
                                         ;(GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
+                                        ;; (try
+                                        ;;   (GL11/glClearColor 0.2 0.3 0.3 1.0) ; A nice blue-green color
+                                        ;;   (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
+                                        ;;   (catch Exception e
+                                        ;;     (println "Exception in create-window: " e)))
                                         (pop-msg-fn)
                                         (pop-window-msg-fn window)
+                                        (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
                                         ;; ((fn [w]
                                         ;;    (GLFW/glfwSetWindowTitle w "foo"))
-                                         ;; window)
+                                        ;; window)
                                         (GLFW/glfwSwapBuffers window)
                                         (GLFW/glfwPollEvents))
                                       (catch Exception e
