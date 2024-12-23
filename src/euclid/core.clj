@@ -73,6 +73,14 @@ void main()
     (GLFW/glfwInit)
     (GLFW/glfwSetErrorCallback (GLFWErrorCallback/createPrint System/err))))
 
+(defn window-callback [window, key, scancode, action, mods]
+  (println "keypressed" key scancode action mods)
+  (when (and (= key GLFW/GLFW_KEY_ESCAPE)
+             (= action GLFW/GLFW_RELEASE))
+    (println "exiting")
+    (GLFW/glfwSetWindowShouldClose window true))
+  )
+
 (defn create-window []
   (GLFW/glfwInit)
   (GLFW/glfwDefaultWindowHints)
@@ -83,6 +91,8 @@ void main()
     (GL/createCapabilities)
     
     (GLFW/glfwShowWindow window)
+
+    (GLFW/glfwSetKeyCallback window window-callback)
     
     (try 
       (GL11/glClearColor 1.0 0.0 0.0 1.0)
@@ -131,6 +141,7 @@ void main()
   (reset! window-thread (Thread. #(let [window (create-window)]
                                     (try 
                                       (while (not (GLFW/glfwWindowShouldClose window))
+                                        (GL/createCapabilities)
                                         ;(println "In loop")
                                         ;(GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
                                         ;; (try
